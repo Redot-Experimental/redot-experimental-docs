@@ -1,2 +1,3 @@
-# redot-experimental-docs
-Redot Experimental documentation
+# Redot Experimental Documentation
+
+Welcome to the Redot Experimental documentation!

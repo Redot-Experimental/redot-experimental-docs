@@ -1,0 +1,366 @@
+openapi: 3.1.0
+info:
+  title: Redot Engine Backend
+  version: 1.0.0
+servers:
+  - url: https://api.redotengine.org/api/v1
+tags:
+  - name: Versions
+    description: Endpoints related to engine versions.
+paths:
+  /version/latest:
+    get:
+      tags:
+        - Versions
+      summary: Get the latest version
+      description: Fetch the latest version of the engine.
+      responses:
+        "200":
+          description: Latest version retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Version"
+  /version:
+    get:
+      tags:
+        - Versions
+      summary: Get a list of all versions
+      description: Fetch all available versions of the engine.
+      parameters:
+        - name: version_type
+          in: query
+          description: Filter the list of versions by release channel (e.g., release, beta, alpha)
+          required: false
+          schema:
+            type: string
+            enum:
+              - release
+              - beta
+              - alpha
+            example: release
+      responses:
+        "200":
+          description: A list of versions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Version"
+        "400":
+          description: Invalid query parameters
+    post:
+      tags:
+        - Versions
+      summary: Create a new version
+      description: Create a new version of the engine.
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/CreateVersion"
+      responses:
+        "200":
+          description: Version created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Version"
+        "400":
+          description: Invalid input
+        "403":
+          description: Forbidden - You are not authorized to create this version.
+  /version/{id}:
+    get:
+      tags:
+        - Versions
+      summary: Get a specific version by ID
+      description: Fetch a specific version of the engine by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier for the version (cuid2)
+          schema:
+            type: string
+            example: uohlw2d5lfh5pdgaavtsw9v6
+      responses:
+        "200":
+          description: The specified version retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Version"
+        "404":
+          description: Version not found
+    delete:
+      tags:
+        - Versions
+      summary: Delete a specific version by ID
+      description: Delete a specific version of the engine by its ID.
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier for the version (cuid2)
+          schema:
+            type: string
+            example: uohlw2d5lfh5pdgaavtsw9v6
+      responses:
+        "200":
+          description: Version deleted successfully
+        "404":
+          description: Version not found
+        "403":
+          description: Forbidden - User does not have permission to delete this version
+    patch:
+      tags:
+        - Versions
+      summary: Modify a specific version by ID
+      description: Modify a specific version of the engine by its ID.
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier for the version (cuid2)
+          schema:
+            type: string
+            example: uohlw2d5lfh5pdgaavtsw9v6
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Version"
+      responses:
+        "200":
+          description: Version modified successfully
+        "400":
+          description: Invalid input
+        "404":
+          description: Version not found
+        "403":
+          description: Forbidden - User does not have permission to modify this version
+  /version/{id}/file:
+    post:
+      tags:
+        - Versions
+      summary: Upload a file to a specific version
+      description: Upload a file to the specified version by its ID.
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier for the version (cuid2)
+          schema:
+            type: string
+            example: uohlw2d5lfh5pdgaavtsw9v6
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The file to upload
+                file_part:
+                  type: string
+                  description: The multipart field name of the file for this version
+                  example: "exampleFilePart"
+              required:
+                - file
+                - file_part
+  /versions:
+    get:
+      tags:
+        - Versions
+      summary: Get multiple versions by their IDs
+      description: Fetch multiple versions of the engine by their IDs.
+      parameters:
+        - name: ids
+          in: query
+          description: List of version IDs to fetch
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+            example:
+              - uohlw2d5lfh5pdgaavtsw9v6
+              - a2df73h5g8i7j1kl4m5np9p2
+      responses:
+        "200":
+          description: A list of versions matching the provided IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Version"
+        "400":
+          description: Invalid query parameters
+        "404":
+          description: One or more versions not found
+components:
+  schemas:
+    Version:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the version
+          example: Version 1.0.0
+        version_number:
+          type: string
+          description: The version number. Ideally will follow semantic versioning
+          example: 1.0.0
+        changelog:
+          type: string
+          description: The changelog for this version
+          nullable: true
+          example: List of changes in this version...
+        changelog_url:
+          type: string
+          description: A direct URL to the changelog for this version
+          nullable: true
+          example: "https://example.com/changelog"
+        version_type:
+          type: string
+          description: The release channel for this version
+          enum:
+            - release
+            - beta
+            - alpha
+          example: release
+        status:
+          type: string
+          description: The current status of the version
+          enum:
+            - listed
+            - archived
+            - draft
+            - unlisted
+            - scheduled
+            - unknown
+          example: listed
+        id:
+          type: string
+          description: Unique identifier for the version (cuid2)
+          example: uohlw2d5lfh5pdgaavtsw9v6
+        author_id:
+          type: string
+          description: The ID of the author who published this version (cuid2)
+          example: dtgc58bc5olg7wlvhb10xpy6
+        date_published:
+          type: string
+          description: The date this version was published, in ISO 8601 format
+          example: "2024-11-15T10:00:00Z"
+        files:
+          type: array
+          description: A list of files available for download for this version
+          items:
+            type: object
+            properties:
+              hashes:
+                type: object
+                description: A map of hashes of the file. The key is the hashing algorithm and the value is the string version of the hash
+                additionalProperties:
+                  type: string
+                example:
+                  sha256: abc123def456...
+                  md5: d41d8cd98f00b204e9800998ecf8427e
+              url:
+                type: string
+                description: A direct link to the file
+                example: https://example.com/my_file.exe
+              filename:
+                type: string
+                description: The name of the file
+                example: my_file.exe
+              size:
+                type: integer
+                description: The size of the file in bytes
+                example: 1234567
+              platform:
+                type: string
+                description: The platform for which the file is intended
+                example: windows
+            required:
+              - hashes
+              - url
+              - filename
+              - size
+              - platform
+      required:
+        - id
+        - author_id
+        - date_published
+        - files
+    CreateVersion:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the version
+          example: Version 1.0.0
+        version_number:
+          type: string
+          description: The version number. Ideally will follow semantic versioning
+          example: 1.0.0
+        changelog:
+          type: string
+          description: The changelog for this version
+          nullable: true
+          example: List of changes in this version...
+        changelog_url:
+          type: string
+          description: A direct URL to the changelog for this version
+          nullable: true
+          example: "https://example.com/changelog"
+        version_type:
+          type: string
+          description: The release channel for this version
+          enum:
+            - release
+            - beta
+            - alpha
+          example: release
+        status:
+          type: string
+          description: The current status of the version
+          enum:
+            - listed
+            - archived
+            - draft
+            - unlisted
+            - scheduled
+            - unknown
+          example: listed
+        file_parts:
+          type: array
+          description: An array of the multipart field names of each file that goes with this version
+          items:
+            type: string
+      required:
+        - name
+        - version_number
+        - file_parts
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: API key authentication for authorized requests.
