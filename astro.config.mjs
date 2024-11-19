@@ -5,7 +5,7 @@ import starlightOpenAPI, { openAPISidebarGroups } from 'starlight-openapi'
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://docs.experimental.redotengine.org/',
+	site: 'https://docs-experimental.redotengine.org',
 	integrations: [
 		starlight({
 			title: 'Redot Experimental Documentation',
