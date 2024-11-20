@@ -19,8 +19,8 @@ export default defineConfig({
 				'x.com': 'https://x.com/Redot_Engine',
 			},
 			logo: {
-				light: './src/assets/logo.svg',
-				dark: './src/assets/logo.svg',
+				light: './src/assets/dark-logo.svg',
+				dark: './src/assets/light-logo.svg',
 				replacesTitle: true,
 			},
 			customCss: [
