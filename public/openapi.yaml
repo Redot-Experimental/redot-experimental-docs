@@ -2,8 +2,47 @@ openapi: 3.1.0
 info:
   title: Redot Engine Backend
   version: 1.0.0
+  contact:
+    name: Redot Community
+    url: https://discord.gg/redot
+    email: redotengine@gmail.com
+  description: |
+    This documentation does not include a method for testing our API. To make testing easier, we recommend using the following tools:
+
+    - [cURL](https://curl.se/) (✅ Recommended)
+    - [HTTPie](https://httpie.io/) (✅ Recommended)  
+    - [Postman](https://www.postman.com/downloads/) (✅ Recommended)
+    - [ReqBIN](https://reqbin.com/) (🛜 Online)
+    - [Insomnia](https://insomnia.rest/)
+    - Your web browser, suitable for simple requests without headers or a request body.
+
+    ## Rate Limits
+    
+    The API enforces rate limits on a per-IP basis. These limits and their current status are communicated through the response headers:
+    
+      - `X-Ratelimit-Limit`: The maximum number of requests allowed per minute.
+      - `X-Ratelimit-Remaining`: The number of requests left in the current rate limit window.
+      - `X-Ratelimit-Reset`: The time in seconds until the rate limit window resets.
+      
+    Rate limits apply equally regardless of whether a token is used. The current limit is set at **300 requests per minute**.
+      
+    If your use case requires a higher limit, feel free to [contact us](mailto:redotengine@gmail.com).
+
+    ## User Agents
+      
+    To access the Redot API, you **must** provide a uniquely identifiable `User-Agent` header. Using a generic user agent that only identifies your HTTP client library (e.g., `"okhttp/4.9.3"`) significantly increases the likelihood of your traffic being blocked.
+      
+    ### Recommendations:
+    Including contact information in your user agent is optional but highly recommended. This allows us to reach out regarding potential changes to your application's behavior without needing to block your traffic.
+    
+    #### Examples:
+    - **Bad:** `User-Agent: okhttp/4.9.3`
+    - **Good:** `User-Agent: project_name`
+    - **Better:** `User-Agent: github_username/project_name/1.0.0`
+    - **Best:** `User-Agent: github_username/project_name/1.0.0 (redotengine.org)` or `User-Agent: github_username/project_name/1.0.0 (contact@redotengine.org)`
 servers:
   - url: https://api.redotengine.org/api/v1
+    description: Production server
 tags:
   - name: Versions
     description: Endpoints related to engine versions.
