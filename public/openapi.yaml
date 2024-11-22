@@ -2,18 +2,61 @@ openapi: 3.1.0
 info:
   title: Redot Engine Backend
   version: 1.0.0
+  contact:
+    name: Redot Community
+    url: https://discord.gg/redot
+    email: redotengine@gmail.com
+  description: |
+    This documentation does not include a method for testing our API. To make testing easier, we recommend using the following tools:
+
+    - [cURL](https://curl.se/) (✅ Recommended)
+    - [HTTPie](https://httpie.io/) (✅ Recommended)  
+    - [Postman](https://www.postman.com/downloads/) (✅ Recommended)
+    - [ReqBIN](https://reqbin.com/) (🛜 Online)
+    - [Insomnia](https://insomnia.rest/)
+    - Your web browser, suitable for simple requests without headers or a request body.
+
+    ## Rate Limits
+    
+    The API enforces rate limits on a per-IP basis. These limits and their current status are communicated through the response headers:
+    
+      - `X-Ratelimit-Limit`: The maximum number of requests allowed per minute.
+      - `X-Ratelimit-Remaining`: The number of requests left in the current rate limit window.
+      - `X-Ratelimit-Reset`: The time in seconds until the rate limit window resets.
+      
+    Rate limits apply equally regardless of whether a token is used. The current limit is set at **300 requests per minute**.
+      
+    If your use case requires a higher limit, feel free to [contact us](mailto:redotengine@gmail.com).
+
+    ## User Agents
+      
+    To access the Redot API, you **must** provide a uniquely identifiable `User-Agent` header. Using a generic user agent that only identifies your HTTP client library (e.g., `"okhttp/4.9.3"`) significantly increases the likelihood of your traffic being blocked.
+      
+    ### Recommendations:
+    Including contact information in your user agent is optional but highly recommended. This allows us to reach out regarding potential changes to your application's behavior without needing to block your traffic.
+    
+    #### Examples:
+    - **Bad:** `User-Agent: okhttp/4.9.3`
+    - **Good:** `User-Agent: project_name`
+    - **Better:** `User-Agent: github_username/project_name/1.0.0`
+    - **Best:** `User-Agent: github_username/project_name/1.0.0 (redotengine.org)` or `User-Agent: github_username/project_name/1.0.0 (contact@redotengine.org)`
 servers:
   - url: https://api.redotengine.org/api/v1
+    description: Production server
 tags:
   - name: Versions
     description: Endpoints related to engine versions.
+  - name: Versions Files
+    description: Endpoints for verifying the integrity of version files.
 paths:
   /version/latest:
     get:
       tags:
         - Versions
       summary: Get the latest version
-      description: Fetch the latest version of the engine.
+      description: Fetch the latest version of the engine, optionally filtered by version type (e.g., release, beta, alpha).
+      parameters:
+        - $ref: "#/components/parameters/VersionType"
       responses:
         "200":
           description: Latest version retrieved successfully
@@ -21,24 +64,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Version"
+        "400":
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidQueryParametersError"
   /version:
     get:
       tags:
         - Versions
       summary: Get a list of all versions
-      description: Fetch all available versions of the engine.
+      description: Fetch all available versions of the engine with sorting and pagination.
       parameters:
-        - name: version_type
-          in: query
-          description: Filter the list of versions by release channel (e.g., release, beta, alpha)
-          required: false
-          schema:
-            type: string
-            enum:
-              - release
-              - beta
-              - alpha
-            example: release
+        - $ref: "#/components/parameters/VersionType"
+        - $ref: "#/components/parameters/VersionIndex"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: A list of versions
@@ -50,44 +92,49 @@ paths:
                   $ref: "#/components/schemas/Version"
         "400":
           description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidQueryParametersError"
     post:
       tags:
         - Versions
       summary: Create a new version
-      description: Create a new version of the engine.
+      description: |
+        This route creates a new version of the engine. Each new version must include at least one attached file, except when the new version's status is `draft`. 
+        
+        The `file_id` field, which uniquely identifies each file, must be specified and can be obtained from the API release page.
       security:
         - apiKeyAuth: []
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              $ref: "#/components/schemas/CreateVersion"
+              $ref: "#/components/schemas/CreateVersionBody"
       responses:
         "200":
           description: Version created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Version"
+                  $ref: "#/components/schemas/Version"
         "400":
-          description: Invalid input
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidInputError"
         "403":
           description: Forbidden - You are not authorized to create this version.
   /version/{id}:
+    parameters:
+      - $ref: "#/components/parameters/VersionIdentifier"
     get:
       tags:
         - Versions
       summary: Get a specific version by ID
       description: Fetch a specific version of the engine by its ID.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier for the version (cuid2)
-          schema:
-            type: string
-            example: uohlw2d5lfh5pdgaavtsw9v6
       responses:
         "200":
           description: The specified version retrieved successfully
@@ -104,14 +151,6 @@ paths:
       description: Delete a specific version of the engine by its ID.
       security:
         - apiKeyAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier for the version (cuid2)
-          schema:
-            type: string
-            example: uohlw2d5lfh5pdgaavtsw9v6
       responses:
         "200":
           description: Version deleted successfully
@@ -126,25 +165,21 @@ paths:
       description: Modify a specific version of the engine by its ID.
       security:
         - apiKeyAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier for the version (cuid2)
-          schema:
-            type: string
-            example: uohlw2d5lfh5pdgaavtsw9v6
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Version"
+              $ref: "#/components/schemas/BaseVersion"
       responses:
         "200":
           description: Version modified successfully
         "400":
-          description: Invalid input
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidInputError"
         "404":
           description: Version not found
         "403":
@@ -153,36 +188,26 @@ paths:
     post:
       tags:
         - Versions
-      summary: Upload a file to a specific version
-      description: Upload a file to the specified version by its ID.
+      summary: Add files to a specific version
+      description: Add one or multiple files to the specified version by its ID.
       security:
         - apiKeyAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier for the version (cuid2)
-          schema:
-            type: string
-            example: uohlw2d5lfh5pdgaavtsw9v6
+        - $ref: "#/components/parameters/VersionIdentifier"
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
               type: object
               properties:
-                file:
-                  type: string
-                  format: binary
-                  description: The file to upload
-                file_part:
-                  type: string
-                  description: The multipart field name of the file for this version
-                  example: "exampleFilePart"
+                files:
+                  type: array
+                  description: A list of files to add, with metadata.
+                  items:
+                    $ref: "#/components/schemas/VersionFile"
               required:
-                - file
-                - file_part
+                - files
   /versions:
     get:
       tags:
@@ -212,31 +237,172 @@ paths:
                   $ref: "#/components/schemas/Version"
         "400":
           description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidQueryParametersError"
         "404":
           description: One or more versions not found
+
+  /version_file/{hash}:
+    parameters:
+      - $ref: "#/components/parameters/FileHashIdentifier"
+    get:
+      tags:
+        - Versions Files
+      summary: Get version from file hash
+      description: |
+        Retrieves the version of the engine associated with a specific file, identified by its cryptographic hash.
+      responses:
+        "200":
+          description: The version associated with the given file hash.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Version"
+        "404":
+          description: File not found for the given hash.
+    delete:
+      tags:
+        - Versions Files
+      summary: Delete a specific file by hash
+      description: |
+        Deletes a specific file from a version by its cryptographic hash. Requires authentication via API key.
+      parameters:
+        - $ref: "#/components/parameters/VersionIdentifier"
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: The file was successfully deleted.
+        "404":
+          description: File not found for the given hash.
+        "403":
+          description: Forbidden - User does not have permission to delete this file.
+  /version_files:
+    get:
+      tags:
+        - Versions Files
+      summary: Get versions from file hashes
+      description: |
+        Retrieves versions associated with one or more file hashes. Useful for tracking versions by specific file identifiers.
+      parameters:
+        - $ref: "#/components/parameters/FileHashes"
+      responses:
+        "200":
+          description: A list of versions associated with the provided file hashes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Version"
+        "400":
+          description: Invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidQueryParametersError"
+        "404":
+          description: No versions found for the provided hashes.
+
 components:
+  parameters:
+    Offset:
+      name: offset
+      in: query
+      description: The offset for pagination, specifying how many items to skip.
+      required: false
+      schema:
+        type: integer
+        default: 0
+        example: 20
+    Limit:
+      name: limit
+      in: query
+      description: The number of versions to return, with a maximum limit.
+      required: false
+      schema:
+        type: integer
+        default: 10
+        maximum: 100
+        example: 20
+    VersionIdentifier:
+      name: id
+      in: path
+      required: true
+      description: Unique identifier for the version
+      schema:
+        type: string
+        example: uohlw2d5lfh5pdgaavtsw9v6
+    FileHashIdentifier:
+      name: hash
+      in: path
+      required: true
+      description: A unique identifier representing the cryptographic hash of the file.
+      schema:
+        type: string
+        example: f50309b2811c10142932bc026ef83f0431bfdbbe612881276d108aba69c4406171c7ba7acd25019fa1b3bfa3c09e20f7382468a098666cdd03f1b7f16d2c214d
+    FileHashes:
+      name: hashes
+      in: query
+      required: true
+      description: A list of cryptographic file hashes to fetch the associated versions.
+      schema:
+        type: array
+        items:
+          type: string
+      example:
+        - f50309b2811c10142932bc026ef83f0431bfdbbe612881276d108aba69c4406171c7ba7acd25019fa1b3bfa3c09e20f7382468a098666cdd03f1b7f16d2c214d
+        - abc123def4567890fedcba9876543210abcdef1234567890abcdef9876543210
+    VersionType:
+      name: version_type
+      in: query
+      description: Optionally filter by version type (e.g., release, beta, alpha). Defaults to "release".
+      required: false
+      schema:
+        type: string
+        enum:
+          - release
+          - beta
+          - alpha
+        example: release
+    VersionIndex:
+      name: index
+      in: query
+      description: Sort the list of versions by a specific criterion.
+      required: false
+      schema:
+        type: string
+        enum:
+          - relevance
+          - downloads
+          - newest
+          - updated
+        default: newest
+        example: newest
   schemas:
-    Version:
+    BaseVersion:
       type: object
       properties:
         name:
           type: string
-          description: Name of the version
-          example: Version 1.0.0
+          description: "Name of the version"
+          example: "Version 1.0.0"
         version_number:
           type: string
-          description: The version number. Ideally will follow semantic versioning
-          example: 1.0.0
+          description: "The version number. Ideally will follow semantic versioning"
+          example: "1.0.0"
         changelog:
           type: string
-          description: The changelog for this version
+          description: "The changelog for this version"
+          example: "List of changes in this version..."
           nullable: true
-          example: List of changes in this version...
         changelog_url:
           type: string
-          description: A direct URL to the changelog for this version
-          nullable: true
+          description: "A direct URL to the changelog for this version"
           example: "https://example.com/changelog"
+          nullable: true
         version_type:
           type: string
           description: The release channel for this version
@@ -256,108 +422,128 @@ components:
             - scheduled
             - unknown
           example: listed
-        id:
-          type: string
-          description: Unique identifier for the version (cuid2)
-          example: uohlw2d5lfh5pdgaavtsw9v6
-        author_id:
-          type: string
-          description: The ID of the author who published this version (cuid2)
-          example: dtgc58bc5olg7wlvhb10xpy6
-        date_published:
-          type: string
-          description: The date this version was published, in ISO 8601 format
-          example: "2024-11-15T10:00:00Z"
-        files:
-          type: array
-          description: A list of files available for download for this version
-          items:
-            type: object
-            properties:
-              hashes:
+    CreatableVersion:
+      allOf:
+        - $ref: "#/components/schemas/BaseVersion"
+        - type: object
+          properties:
+            github_release_url:
+              type: string
+              description: "URL to the GitHub release"
+              example: "https://github.com/username/repo/releases/tag/example"
+            files:
+              type: array
+              description: "List of files associated with the version"
+              items:
                 type: object
-                description: A map of hashes of the file. The key is the hashing algorithm and the value is the string version of the hash
-                additionalProperties:
-                  type: string
-                example:
-                  sha256: abc123def456...
-                  md5: d41d8cd98f00b204e9800998ecf8427e
-              url:
-                type: string
-                description: A direct link to the file
-                example: https://example.com/my_file.exe
-              filename:
-                type: string
-                description: The name of the file
-                example: my_file.exe
-              size:
-                type: integer
-                description: The size of the file in bytes
-                example: 1234567
-              platform:
-                type: string
-                description: The platform for which the file is intended
-                example: windows
-            required:
-              - hashes
-              - url
-              - filename
-              - size
-              - platform
-      required:
-        - id
-        - author_id
-        - date_published
-        - files
-    CreateVersion:
+                properties:
+                  file_id:
+                    type: string
+                    description: "Unique identifier for the file"
+                    example: "8828197"
+                  platform:
+                    type: string
+                    description: "Target platform for the file (e.g., Windows, Linux, macOS)"
+                    example: "windows"
+                  architecture:
+                    type: string
+                    description: "Architecture for the file (e.g., x86, x64, arm64)"
+                    example: "x64"
+                  hash:
+                    type: string
+                    description: "Hash (e.g., SHA-512) for verifying file integrity"
+                    example: "abc123def456..."
+          required:
+            - name
+            - version_number
+            - status
+            - version_type
+            - github_release_url
+            - files
+    CreateVersionBody:
       type: object
       properties:
-        name:
+        data:
+          $ref: "#/components/schemas/CreatableVersion"
+      required: [ data ]
+    VersionFile:
+      type: object
+      properties:
+        hash:
           type: string
-          description: Name of the version
-          example: Version 1.0.0
-        version_number:
+          description: "Hash (e.g., SHA-512) for verifying file integrity"
+          example: "abc123def456..."
+        url:
           type: string
-          description: The version number. Ideally will follow semantic versioning
-          example: 1.0.0
-        changelog:
+          description: "A direct link to the file"
+          example: "https://example.com/my_file.exe"
+        filename:
           type: string
-          description: The changelog for this version
-          nullable: true
-          example: List of changes in this version...
-        changelog_url:
+          description: "The name of the file"
+          example: "my_file.exe"
+        size:
+          type: integer
+          description: "The size of the file in bytes"
+          example: "1234567"
+        architecture:
           type: string
-          description: A direct URL to the changelog for this version
-          nullable: true
-          example: "https://example.com/changelog"
-        version_type:
+          description: "Architecture for the file (e.g., x86, x64, arm64)"
+          example: "x64"
+    Version:
+      allOf:
+        - $ref: "#/components/schemas/BaseVersion"
+        - type: object
+          properties:
+            id:
+              type: string
+              description: "A unique identifier for this version, using the CUID2 format"
+              example: "uohlw2d5lfh5pdgaavtsw9v6"
+            author_id:
+              type: string
+              description: "The unique identifier of the author who published this version, formatted as CUID2"
+              example: "dtgc58bc5olg7wlvhb10xpy6"
+            date_published:
+              type: string
+              description: "The date this version was published, in ISO 8601 format"
+              example: "2024-11-15T10:00:00Z"
+            files:
+              type: array
+              items:
+                $ref: "#/components/schemas/VersionFile"
+                description: "A list of files available for download for this version"
+            github_release_url:
+              type: string
+              description: "URL to the GitHub release"
+              example: "https://github.com/username/repo/releases/tag/example"
+
+    InvalidInputError:
+      type: object
+      properties:
+        error:
           type: string
-          description: The release channel for this version
-          enum:
-            - release
-            - beta
-            - alpha
-          example: release
-        status:
+          description: "A short error code or message indicating the type of error"
+          example: "invalid_input"
+        description:
           type: string
-          description: The current status of the version
-          enum:
-            - listed
-            - archived
-            - draft
-            - unlisted
-            - scheduled
-            - unknown
-          example: listed
-        file_parts:
-          type: array
-          description: An array of the multipart field names of each file that goes with this version
-          items:
-            type: string
+          description: "A detailed message explaining the reason for the error"
+          example: "The input JSON is missing required fields or contains invalid values"
       required:
-        - name
-        - version_number
-        - file_parts
+        - error
+        - description
+    InvalidQueryParametersError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "A brief description of the error related to invalid query parameters."
+          example: "Invalid query parameters"
+        description:
+          type: string
+          description: "A more detailed explanation of what was wrong with the query parameters."
+      required:
+        - error
+        - description
+
   securitySchemes:
     apiKeyAuth:
       type: apiKey
