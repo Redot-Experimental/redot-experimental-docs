@@ -52,32 +52,29 @@ paths:
       tags:
         - Versions
       summary: Get the latest version
-      description: Fetch the latest version of the engine.
+      description: Fetch the latest version of the engine, optionally filtered by version type (e.g., release, beta, alpha).
+      parameters:
+        - $ref: "#/components/parameters/VersionType"
       responses:
         "200":
           description: Latest version retrieved successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Version"
+                $ref: "#/components/schemas/BaseVersion"
+        "400":
+          description: Invalid query parameters
   /version:
     get:
       tags:
         - Versions
       summary: Get a list of all versions
-      description: Fetch all available versions of the engine.
+      description: Fetch all available versions of the engine with sorting and pagination.
       parameters:
-        - name: version_type
-          in: query
-          description: Filter the list of versions by release channel (e.g., release, beta, alpha)
-          required: false
-          schema:
-            type: string
-            enum:
-              - release
-              - beta
-              - alpha
-            example: release
+        - $ref: "#/components/parameters/VersionType"
+        - $ref: "#/components/parameters/VersionIndex"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: A list of versions
@@ -86,7 +83,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Version"
+                  $ref: "#/components/schemas/BaseVersion"
         "400":
           description: Invalid query parameters
     post:
@@ -108,32 +105,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Version"
+                $ref: "#/components/schemas/BaseVersion"
         "400":
           description: Invalid input
         "403":
           description: Forbidden - You are not authorized to create this version.
   /version/{id}:
+    parameters:
+      - $ref: "#/components/parameters/VersionIdentifier"
     get:
       tags:
         - Versions
       summary: Get a specific version by ID
       description: Fetch a specific version of the engine by its ID.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier for the version (cuid2)
-          schema:
-            type: string
-            example: uohlw2d5lfh5pdgaavtsw9v6
       responses:
         "200":
           description: The specified version retrieved successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Version"
+                $ref: "#/components/schemas/BaseVersion"
         "404":
           description: Version not found
     delete:
@@ -143,14 +134,6 @@ paths:
       description: Delete a specific version of the engine by its ID.
       security:
         - apiKeyAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier for the version (cuid2)
-          schema:
-            type: string
-            example: uohlw2d5lfh5pdgaavtsw9v6
       responses:
         "200":
           description: Version deleted successfully
@@ -165,20 +148,12 @@ paths:
       description: Modify a specific version of the engine by its ID.
       security:
         - apiKeyAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier for the version (cuid2)
-          schema:
-            type: string
-            example: uohlw2d5lfh5pdgaavtsw9v6
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Version"
+              $ref: "#/components/schemas/BaseVersion"
       responses:
         "200":
           description: Version modified successfully
@@ -197,13 +172,7 @@ paths:
       security:
         - apiKeyAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          description: The unique identifier for the version (cuid2)
-          schema:
-            type: string
-            example: uohlw2d5lfh5pdgaavtsw9v6
+        - $ref: "#/components/parameters/VersionIdentifier"
       requestBody:
         required: true
         content:
@@ -248,155 +217,127 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Version"
+                  $ref: "#/components/schemas/BaseVersion"
         "400":
           description: Invalid query parameters
         "404":
           description: One or more versions not found
 components:
+  parameters:
+    Offset:
+      name: offset
+      in: query
+      description: The offset for pagination, specifying how many items to skip.
+      required: false
+      schema:
+        type: integer
+        default: 0
+        example: 20
+    Limit:
+      name: limit
+      in: query
+      description: The number of versions to return, with a maximum limit.
+      required: false
+      schema:
+        type: integer
+        default: 10
+        maximum: 100
+        example: 20
+    VersionIdentifier:
+      name: id
+      in: path
+      required: true
+      description: Unique identifier for the version
+      schema:
+        type: string
+        example: uohlw2d5lfh5pdgaavtsw9v6
+    VersionType:
+      name: version_type
+      in: query
+      description: Optionally filter by version type (e.g., release, beta, alpha). Defaults to "release".
+      required: false
+      schema:
+        type: string
+        enum:
+          - release
+          - beta
+          - alpha
+        example: release
+    VersionIndex:
+      name: index
+      in: query
+      description: Sort the list of versions by a specific criterion.
+      required: false
+      schema:
+        type: string
+        enum:
+          - relevance
+          - downloads
+          - newest
+          - updated
+        default: newest
+        example: newest
   schemas:
-    Version:
+    BaseVersion:
       type: object
       properties:
         name:
           type: string
-          description: Name of the version
-          example: Version 1.0.0
+          description: "Name of the version"
+          example: "Version 1.0.0"
         version_number:
           type: string
-          description: The version number. Ideally will follow semantic versioning
-          example: 1.0.0
-        changelog:
-          type: string
-          description: The changelog for this version
-          nullable: true
-          example: List of changes in this version...
-        changelog_url:
-          type: string
-          description: A direct URL to the changelog for this version
-          nullable: true
-          example: "https://example.com/changelog"
-        version_type:
-          type: string
-          description: The release channel for this version
-          enum:
-            - release
-            - beta
-            - alpha
-          example: release
-        status:
-          type: string
-          description: The current status of the version
-          enum:
-            - listed
-            - archived
-            - draft
-            - unlisted
-            - scheduled
-            - unknown
-          example: listed
-        id:
-          type: string
-          description: Unique identifier for the version (cuid2)
-          example: uohlw2d5lfh5pdgaavtsw9v6
-        author_id:
-          type: string
-          description: The ID of the author who published this version (cuid2)
-          example: dtgc58bc5olg7wlvhb10xpy6
-        date_published:
-          type: string
-          description: The date this version was published, in ISO 8601 format
-          example: "2024-11-15T10:00:00Z"
-        files:
-          type: array
-          description: A list of files available for download for this version
-          items:
-            type: object
-            properties:
-              hashes:
-                type: object
-                description: A map of hashes of the file. The key is the hashing algorithm and the value is the string version of the hash
-                additionalProperties:
-                  type: string
-                example:
-                  sha256: abc123def456...
-                  md5: d41d8cd98f00b204e9800998ecf8427e
-              url:
-                type: string
-                description: A direct link to the file
-                example: https://example.com/my_file.exe
-              filename:
-                type: string
-                description: The name of the file
-                example: my_file.exe
-              size:
-                type: integer
-                description: The size of the file in bytes
-                example: 1234567
-              platform:
-                type: string
-                description: The platform for which the file is intended
-                example: windows
-            required:
-              - hashes
-              - url
-              - filename
-              - size
-              - platform
-      required:
-        - id
-        - author_id
-        - date_published
-        - files
-    CreateVersion:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the version
-          example: Version 1.0.0
-        version_number:
-          type: string
-          description: The version number. Ideally will follow semantic versioning
-          example: 1.0.0
-        changelog:
-          type: string
-          description: The changelog for this version
-          nullable: true
-          example: List of changes in this version...
-        changelog_url:
-          type: string
-          description: A direct URL to the changelog for this version
-          nullable: true
-          example: "https://example.com/changelog"
-        version_type:
-          type: string
-          description: The release channel for this version
-          enum:
-            - release
-            - beta
-            - alpha
-          example: release
-        status:
-          type: string
-          description: The current status of the version
-          enum:
-            - listed
-            - archived
-            - draft
-            - unlisted
-            - scheduled
-            - unknown
-          example: listed
-        file_parts:
-          type: array
-          description: An array of the multipart field names of each file that goes with this version
-          items:
+          description: "The version number. Ideally will follow semantic versioning"
+          example: "1.0.0"
+          changelog:
             type: string
-      required:
-        - name
-        - version_number
-        - file_parts
+            description: "The changelog for this version"
+            example: "List of changes in this version..."
+            nullable: true
+          changelog_url:
+            type: string
+            description: "A direct URL to the changelog for this version"
+            example: "https://example.com/changelog"
+            nullable: true
+        version_type:
+          type: string
+          description: The release channel for this version
+          enum:
+            - release
+            - beta
+            - alpha
+          example: release
+        status:
+          type: string
+          description: The current status of the version
+          enum:
+            - listed
+            - archived
+            - draft
+            - unlisted
+            - scheduled
+            - unknown
+          example: listed
+    CreatableVersion:
+      allOf:
+        - $ref: "#/components/schemas/BaseVersion"
+        - type: object
+          properties:
+            github_release_url:
+              type: string
+              description:
+          required:
+            - name
+            - version_number
+            - status
+            - version_type
+            - github_release_url
+  CreateVersionBody:
+    type: object
+    properties:
+      data:
+        $ref: "#/components/schemas/CreatableVersion"
+    required: [ data ]
   securitySchemes:
     apiKeyAuth:
       type: apiKey
