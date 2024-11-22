@@ -61,9 +61,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BaseVersion"
+                $ref: "#/components/schemas/Version"
         "400":
           description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidQueryParametersError"
   /version:
     get:
       tags:
@@ -83,31 +87,42 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/BaseVersion"
+                  $ref: "#/components/schemas/Version"
         "400":
           description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidQueryParametersError"
     post:
       tags:
         - Versions
       summary: Create a new version
-      description: Create a new version of the engine.
+      description: |
+        This route creates a new version of the engine. Each new version must include at least one attached file, except when the new version's status is `draft`. 
+        
+        The `file_id` field, which uniquely identifies each file, must be specified and can be obtained from the API release page.
       security:
         - apiKeyAuth: []
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              $ref: "#/components/schemas/CreateVersion"
+              $ref: "#/components/schemas/CreateVersionBody"
       responses:
         "200":
           description: Version created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BaseVersion"
+                  $ref: "#/components/schemas/Version"
         "400":
-          description: Invalid input
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidInputError"
         "403":
           description: Forbidden - You are not authorized to create this version.
   /version/{id}:
@@ -124,7 +139,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BaseVersion"
+                $ref: "#/components/schemas/Version"
         "404":
           description: Version not found
     delete:
@@ -158,7 +173,11 @@ paths:
         "200":
           description: Version modified successfully
         "400":
-          description: Invalid input
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidInputError"
         "404":
           description: Version not found
         "403":
@@ -167,8 +186,8 @@ paths:
     post:
       tags:
         - Versions
-      summary: Upload a file to a specific version
-      description: Upload a file to the specified version by its ID.
+      summary: Add files to a specific version
+      description: Add one or multiple files to the specified version by its ID.
       security:
         - apiKeyAuth: []
       parameters:
@@ -176,21 +195,17 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
               type: object
               properties:
-                file:
-                  type: string
-                  format: binary
-                  description: The file to upload
-                file_part:
-                  type: string
-                  description: The multipart field name of the file for this version
-                  example: "exampleFilePart"
+                files:
+                  type: array
+                  description: A list of files to add, with metadata.
+                  items:
+                    $ref: "#/components/schemas/VersionFile"
               required:
-                - file
-                - file_part
+                - files
   /versions:
     get:
       tags:
@@ -217,9 +232,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/BaseVersion"
+                  $ref: "#/components/schemas/Version"
         "400":
           description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidQueryParametersError"
         "404":
           description: One or more versions not found
 components:
@@ -289,16 +308,16 @@ components:
           type: string
           description: "The version number. Ideally will follow semantic versioning"
           example: "1.0.0"
-          changelog:
-            type: string
-            description: "The changelog for this version"
-            example: "List of changes in this version..."
-            nullable: true
-          changelog_url:
-            type: string
-            description: "A direct URL to the changelog for this version"
-            example: "https://example.com/changelog"
-            nullable: true
+        changelog:
+          type: string
+          description: "The changelog for this version"
+          example: "List of changes in this version..."
+          nullable: true
+        changelog_url:
+          type: string
+          description: "A direct URL to the changelog for this version"
+          example: "https://example.com/changelog"
+          nullable: true
         version_type:
           type: string
           description: The release channel for this version
@@ -325,19 +344,122 @@ components:
           properties:
             github_release_url:
               type: string
-              description:
+              description: "URL to the GitHub release"
+              example: "https://github.com/username/repo/releases/tag/example"
+            files:
+              type: array
+              description: "List of files associated with the version"
+              items:
+                type: object
+                properties:
+                  file_id:
+                    type: string
+                    description: "Unique identifier for the file"
+                    example: "8828197"
+                  platform:
+                    type: string
+                    description: "Target platform for the file (e.g., Windows, Linux, macOS)"
+                    example: "windows"
+                  architecture:
+                    type: string
+                    description: "Architecture for the file (e.g., x86, x64, arm64)"
+                    example: "x64"
+                  hash:
+                    type: string
+                    description: "Hash (e.g., SHA-512) for verifying file integrity"
+                    example: "abc123def456..."
           required:
             - name
             - version_number
             - status
             - version_type
             - github_release_url
-  CreateVersionBody:
-    type: object
-    properties:
-      data:
-        $ref: "#/components/schemas/CreatableVersion"
-    required: [ data ]
+            - files
+    CreateVersionBody:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/CreatableVersion"
+      required: [ data ]
+    VersionFile:
+      type: object
+      properties:
+        hash:
+          type: string
+          description: "Hash (e.g., SHA-512) for verifying file integrity"
+          example: "abc123def456..."
+        url:
+          type: string
+          description: "A direct link to the file"
+          example: "https://example.com/my_file.exe"
+        filename:
+          type: string
+          description: "The name of the file"
+          example: "my_file.exe"
+        size:
+          type: integer
+          description: "The size of the file in bytes"
+          example: "1234567"
+        architecture:
+          type: string
+          description: "Architecture for the file (e.g., x86, x64, arm64)"
+          example: "x64"
+
+    Version:
+      allOf:
+        - $ref: "#/components/schemas/BaseVersion"
+        - type: object
+          properties:
+            id:
+              type: string
+              description: "A unique identifier for this version, using the CUID2 format"
+              example: "uohlw2d5lfh5pdgaavtsw9v6"
+            author_id:
+              type: string
+              description: "The unique identifier of the author who published this version, formatted as CUID2"
+              example: "dtgc58bc5olg7wlvhb10xpy6"
+            date_published:
+              type: string
+              description: "The date this version was published, in ISO 8601 format"
+              example: "2024-11-15T10:00:00Z"
+            files:
+              type: array
+              items:
+                $ref: "#/components/schemas/VersionFile"
+                description: "A list of files available for download for this version"
+            github_release_url:
+              type: string
+              description: "URL to the GitHub release"
+              example: "https://github.com/username/repo/releases/tag/example"
+
+    InvalidInputError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "A short error code or message indicating the type of error"
+          example: "invalid_input"
+        description:
+          type: string
+          description: "A detailed message explaining the reason for the error"
+          example: "The input JSON is missing required fields or contains invalid values"
+      required:
+        - error
+        - description
+    InvalidQueryParametersError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "A brief description of the error related to invalid query parameters."
+          example: "Invalid query parameters"
+        description:
+          type: string
+          description: "A more detailed explanation of what was wrong with the query parameters."
+      required:
+        - error
+        - description
+
   securitySchemes:
     apiKeyAuth:
       type: apiKey
