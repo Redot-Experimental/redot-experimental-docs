@@ -46,6 +46,8 @@ servers:
 tags:
   - name: Versions
     description: Endpoints related to engine versions.
+  - name: Versions Files
+    description: Endpoints for verifying the integrity of version files.
 paths:
   /version/latest:
     get:
@@ -241,6 +243,69 @@ paths:
                 $ref: "#/components/schemas/InvalidQueryParametersError"
         "404":
           description: One or more versions not found
+
+  /version_file/{hash}:
+    parameters:
+      - $ref: "#/components/parameters/FileHashIdentifier"
+    get:
+      tags:
+        - Versions Files
+      summary: Get version from file hash
+      description: |
+        Retrieves the version of the engine associated with a specific file, identified by its cryptographic hash.
+      responses:
+        "200":
+          description: The version associated with the given file hash.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Version"
+        "404":
+          description: File not found for the given hash.
+    delete:
+      tags:
+        - Versions Files
+      summary: Delete a specific file by hash
+      description: |
+        Deletes a specific file from a version by its cryptographic hash. Requires authentication via API key.
+      parameters:
+        - $ref: "#/components/parameters/VersionIdentifier"
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: The file was successfully deleted.
+        "404":
+          description: File not found for the given hash.
+        "403":
+          description: Forbidden - User does not have permission to delete this file.
+  /version_files:
+    get:
+      tags:
+        - Versions Files
+      summary: Get versions from file hashes
+      description: |
+        Retrieves versions associated with one or more file hashes. Useful for tracking versions by specific file identifiers.
+      parameters:
+        - $ref: "#/components/parameters/FileHashes"
+      responses:
+        "200":
+          description: A list of versions associated with the provided file hashes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Version"
+        "400":
+          description: Invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidQueryParametersError"
+        "404":
+          description: No versions found for the provided hashes.
+
 components:
   parameters:
     Offset:
@@ -270,6 +335,26 @@ components:
       schema:
         type: string
         example: uohlw2d5lfh5pdgaavtsw9v6
+    FileHashIdentifier:
+      name: hash
+      in: path
+      required: true
+      description: A unique identifier representing the cryptographic hash of the file.
+      schema:
+        type: string
+        example: f50309b2811c10142932bc026ef83f0431bfdbbe612881276d108aba69c4406171c7ba7acd25019fa1b3bfa3c09e20f7382468a098666cdd03f1b7f16d2c214d
+    FileHashes:
+      name: hashes
+      in: query
+      required: true
+      description: A list of cryptographic file hashes to fetch the associated versions.
+      schema:
+        type: array
+        items:
+          type: string
+      example:
+        - f50309b2811c10142932bc026ef83f0431bfdbbe612881276d108aba69c4406171c7ba7acd25019fa1b3bfa3c09e20f7382468a098666cdd03f1b7f16d2c214d
+        - abc123def4567890fedcba9876543210abcdef1234567890abcdef9876543210
     VersionType:
       name: version_type
       in: query
@@ -404,7 +489,6 @@ components:
           type: string
           description: "Architecture for the file (e.g., x86, x64, arm64)"
           example: "x64"
-
     Version:
       allOf:
         - $ref: "#/components/schemas/BaseVersion"
