@@ -22,11 +22,11 @@
     --sl-color-bg-nav: #ffffff;
     --sl-color-bg-sidebar: #ffffff;
     --sl-color-bg-inline-code: hsl(220, 13%, 91%);
-    --sl-color-bg-accent: #640300;
+    --sl-color-bg-accent: #ff7f51;
 
-    --sl-color-accent-low: #ff9362;
-    --sl-color-accent: #a60a00;
-    --sl-color-accent-high: #640300;
+    --sl-color-accent-low: #ff9b54;
+    --sl-color-accent: #ff7f51;
+    --sl-color-accent-high: #ce4257;
 
     --sl-color-white: #1a202c;
     --sl-color-gray-1: hsl(221, 39%, 11%);
