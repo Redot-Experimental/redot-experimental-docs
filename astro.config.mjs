@@ -41,6 +41,10 @@ export default defineConfig({
 					label: 'Contributing',
 					autogenerate: { directory: 'contributing' },
 				},
+				{
+					label: 'Roadmap',
+					autogenerate: { directory: 'roadmap' },
+				},
 				...openAPISidebarGroups,
 			],
 		}),
