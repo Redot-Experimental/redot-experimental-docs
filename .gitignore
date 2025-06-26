@@ -5,6 +5,9 @@ dist/
 
 # dependencies
 node_modules/
+package-lock.lock
+package-lock.json
+yarn.lock
 
 # logs
 npm-debug.log*
@@ -20,4 +23,10 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
+# IDE environments
 .idea/
+.vscode
+.vimrc
+.nanorc
+.stackblitzrc
+sandbox.config.json
