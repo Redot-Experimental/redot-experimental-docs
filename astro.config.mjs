@@ -3,6 +3,8 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import tailwindcss from "@tailwindcss/vite";
 
+import react from "@astrojs/react";
+
 export default defineConfig({
   site: "https://docs-experimental.redotengine.org",
 
@@ -24,14 +26,14 @@ export default defineConfig({
         { icon: "x.com", label: "X", href: "https://x.com/Redot_Engine" },
       ],
       logo: {
-        light: "./src/assets/dark-logo.svg",
-        dark: "./src/assets/light-logo.svg",
+        light: "@/assets/dark-logo.svg",
+        dark: "@/assets/light-logo.svg",
         replacesTitle: true,
       },
       customCss: [
-        "./src/styles/inter.css",
-        "./src/styles/redot.css",
-        "./src/styles/global.css",
+        "@/styles/inter.css",
+        "@/styles/starlight.css",
+        "@/styles/global.css",
       ],
       plugins: [],
       sidebar: [
@@ -45,6 +47,7 @@ export default defineConfig({
         },
       ],
     }),
+    react(),
   ],
 
   vite: {
