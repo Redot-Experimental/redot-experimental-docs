@@ -1,52 +1,54 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
-import starlight from '@astrojs/starlight';
-import starlightOpenAPI, { openAPISidebarGroups } from 'starlight-openapi'
+import { defineConfig } from "astro/config";
+import starlight from "@astrojs/starlight";
+import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://docs-experimental.redotengine.org',
-	integrations: [
-		starlight({
-			title: 'Redot Experimental Documentation',
-			favicon: '/favicon.ico',
-			editLink: {
-				baseUrl: 'https://github.com/Redot-Experimental/redot-experimental-docs/edit/master/src/content/docs/',
-			},
-			social: {
-				github: 'https://github.com/Redot-Engine/redot-engine',
-				discord: "https://discord.gg/redot",
-				'x.com': 'https://x.com/Redot_Engine',
-			},
-			logo: {
-				light: './src/assets/dark-logo.svg',
-				dark: './src/assets/light-logo.svg',
-				replacesTitle: true,
-			},
-			customCss: [
-				'./src/styles/inter.css',
-				'./src/styles/redot.css',
-			],
-			plugins: [
-				starlightOpenAPI([
-					{
-						base: 'api',
-						label: 'Redot API',
-						schema: './public/openapi.yaml',
-					},
-				]),
-			],
-			sidebar: [
-				{
-					label: 'Contributing',
-					autogenerate: { directory: 'contributing' },
-				},
-				{
-					label: 'Roadmap',
-					autogenerate: { directory: 'roadmap' },
-				},
-				...openAPISidebarGroups,
-			],
-		}),
-	],
+  site: "https://docs-experimental.redotengine.org",
+  integrations: [
+    starlight({
+      title: "Redot Experimental Documentation",
+      favicon: "/favicon.ico",
+      editLink: {
+        baseUrl:
+          "https://github.com/Redot-Experimental/redot-experimental-docs/edit/master/src/content/docs/",
+      },
+      social: [
+        {
+          icon: "github",
+          label: "GitHub",
+          href: "https://github.com/Redot-Experimental/ReX",
+        },
+        { icon: "discord", label: "Discord", href: "https://discord.gg/redot" },
+        { icon: "x.com", label: "X", href: "https://x.com/Redot_Engine" },
+      ],
+      logo: {
+        light: "./src/assets/dark-logo.svg",
+        dark: "./src/assets/light-logo.svg",
+        replacesTitle: true,
+      },
+      customCss: ["./src/styles/inter.css", "./src/styles/redot.css"],
+      plugins: [
+        starlightOpenAPI([
+          {
+            base: "api",
+            label: "Redot API",
+            schema: "./public/openapi.yaml",
+          },
+        ]),
+      ],
+      sidebar: [
+        {
+          label: "Contributing",
+          autogenerate: { directory: "contributing" },
+        },
+        {
+          label: "Roadmap",
+          autogenerate: { directory: "roadmap" },
+        },
+        ...openAPISidebarGroups,
+      ],
+    }),
+  ],
 });
