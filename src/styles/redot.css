@@ -1,39 +1,39 @@
 /* Dark mode colors. */
 :root {
-    --sl-color-bg: #16181c;
-    --sl-color-bg-nav: #26292f;
+  --sl-color-bg: #16181c;
+  --sl-color-bg-nav: #26292f;
 
-    --sl-color-accent-low: #FFE8D6;
-    --sl-color-accent: #FFA726;
-    --sl-color-accent-high: #E65100;
+  --sl-color-accent-low: #ffe8d6;
+  --sl-color-accent: #ffa726;
+  --sl-color-accent-high: #e65100;
 
-    --sl-color-white: #ecf9fb;
-    --sl-color-gray-1: #b0bac5;
-    --sl-color-gray-2: #b0bac5;
-    --sl-color-gray-3: #b0bac5;
-    --sl-color-gray-4: #26292f;
-    --sl-color-gray-5: hsl(222, 13%, 30%);
-    --sl-color-gray-6: #26292f;
-    --sl-color-black: #000000;
+  --sl-color-white: #ecf9fb;
+  --sl-color-gray-1: #b0bac5;
+  --sl-color-gray-2: #b0bac5;
+  --sl-color-gray-3: #b0bac5;
+  --sl-color-gray-4: #26292f;
+  --sl-color-gray-5: hsl(222, 13%, 30%);
+  --sl-color-gray-6: #26292f;
+  --sl-color-black: #000000;
 }
 /* Light mode colors. */
-:root[data-theme='light'] {
-    --sl-color-bg: #ffffff;
-    --sl-color-bg-nav: #ffffff;
-    --sl-color-bg-sidebar: #ffffff;
-    --sl-color-bg-inline-code: hsl(220, 13%, 91%);
-    --sl-color-bg-accent: #ff7f51;
+:root[data-theme="light"] {
+  --sl-color-bg: #ffffff;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #ffffff;
+  --sl-color-bg-inline-code: hsl(220, 13%, 91%);
+  --sl-color-bg-accent: #ff7f51;
 
-    --sl-color-accent-low: #ff9b54;
-    --sl-color-accent: #ff7f51;
-    --sl-color-accent-high: #ce4257;
+  --sl-color-accent-low: #ff9b54;
+  --sl-color-accent: #ff7f51;
+  --sl-color-accent-high: #ce4257;
 
-    --sl-color-white: #1a202c;
-    --sl-color-gray-1: hsl(221, 39%, 11%);
-    --sl-color-gray-2: hsl(221, 39%, 11%);
-    --sl-color-gray-3: hsl(221, 39%, 11%);
-    --sl-color-gray-4: #ffffff;
-    --sl-color-gray-5: hsl(220, 13%, 91%);
-    --sl-color-gray-6: #ffffff;
-    --sl-color-black: #ffffff;
+  --sl-color-white: #1a202c;
+  --sl-color-gray-1: hsl(221, 39%, 11%);
+  --sl-color-gray-2: hsl(221, 39%, 11%);
+  --sl-color-gray-3: hsl(221, 39%, 11%);
+  --sl-color-gray-4: #ffffff;
+  --sl-color-gray-5: hsl(220, 13%, 91%);
+  --sl-color-gray-6: #ffffff;
+  --sl-color-black: #ffffff;
 }
