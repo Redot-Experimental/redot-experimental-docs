@@ -3,9 +3,12 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
+import tailwindcss from "@tailwindcss/vite";
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://docs-experimental.redotengine.org",
+
   integrations: [
     starlight({
       title: "Redot Experimental Documentation",
@@ -28,7 +31,11 @@ export default defineConfig({
         dark: "./src/assets/light-logo.svg",
         replacesTitle: true,
       },
-      customCss: ["./src/styles/inter.css", "./src/styles/redot.css"],
+      customCss: [
+        "./src/styles/inter.css",
+        "./src/styles/redot.css",
+        "./src/styles/global.css",
+      ],
       plugins: [
         starlightOpenAPI([
           {
@@ -51,4 +58,8 @@ export default defineConfig({
       ],
     }),
   ],
+
+  vite: {
+    plugins: [tailwindcss()],
+  },
 });
