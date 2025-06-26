@@ -17,9 +17,9 @@ info:
     - Your web browser, suitable for simple requests without headers or a request body.
 
     ## Rate Limits
-    
+
     The API enforces rate limits on a per-IP basis. These limits and their current status are communicated through the response headers:
-    
+
       - `X-Ratelimit-Limit`: The maximum number of requests allowed per minute.
       - `X-Ratelimit-Remaining`: The number of requests left in the current rate limit window.
       - `X-Ratelimit-Reset`: The time in seconds until the rate limit window resets.
@@ -34,7 +34,7 @@ info:
       
     ### Recommendations:
     Including contact information in your user agent is optional but highly recommended. This allows us to reach out regarding potential changes to your application's behavior without needing to block your traffic.
-    
+
     #### Examples:
     - **Bad:** `User-Agent: okhttp/4.9.3`
     - **Good:** `User-Agent: project_name`
@@ -102,7 +102,7 @@ paths:
       summary: Create a new version
       description: |
         This route creates a new version of the engine. Each new version must include at least one attached file, except when the new version's status is `draft`. 
-        
+
         The `file_id` field, which uniquely identifies each file, must be specified and can be obtained from the API release page.
       security:
         - apiKeyAuth: []
@@ -118,7 +118,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: "#/components/schemas/Version"
+                $ref: "#/components/schemas/Version"
         "400":
           description: Request was invalid, see given error
           content:
@@ -465,7 +465,7 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/CreatableVersion"
-      required: [ data ]
+      required: [data]
     VersionFile:
       type: object
       properties:

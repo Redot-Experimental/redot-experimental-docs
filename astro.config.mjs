@@ -1,11 +1,8 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
-import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
-
 import tailwindcss from "@tailwindcss/vite";
 
-// https://astro.build/config
 export default defineConfig({
   site: "https://docs-experimental.redotengine.org",
 
@@ -36,15 +33,7 @@ export default defineConfig({
         "./src/styles/redot.css",
         "./src/styles/global.css",
       ],
-      plugins: [
-        starlightOpenAPI([
-          {
-            base: "api",
-            label: "Redot API",
-            schema: "./public/openapi.yaml",
-          },
-        ]),
-      ],
+      plugins: [],
       sidebar: [
         {
           label: "Contributing",
@@ -54,7 +43,6 @@ export default defineConfig({
           label: "Roadmap",
           autogenerate: { directory: "roadmap" },
         },
-        ...openAPISidebarGroups,
       ],
     }),
   ],

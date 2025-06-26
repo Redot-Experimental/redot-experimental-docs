@@ -1,0 +1,9 @@
+# See https://github.com/actions/labeler
+
+translation: locales/**
+
+feature:
+  - head-branch: ['^feature', 'feature']
+
+fix:
+  - head-branch: ['^fix', 'fix']
