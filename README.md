@@ -10,16 +10,12 @@
 
 <div align="center">
 
-<h1 align="center">Redot Engine Launcher</h1>
+<h1 align="center">Redot Experimental Docs</h1>
 
 Welcome to the official documentation repository for **Redot Experimental**! This repository houses all the information needed to use, develop, and contribute to the Redot Experimental ecosystem.
 </div>
 
 ## Build from source
-
-### Install Node.js
-
-Make sure Node.js is installed on your machine. If it's not, you can download and install it from [nodejs.org](https://nodejs.org/).
 
 ### Install Bun
 
@@ -61,6 +57,19 @@ Build the Astro application using the following command:
 ```bash
 bun build
 ```
+
+## Commands
+
+All commands are run from the root of the project, from a terminal:
+
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `bun install`             | Installs dependencies                            |
+| `bun run dev`             | Starts local dev server at `localhost:4321`      |
+| `bun run build`           | Build your production site to `./dist/`          |
+| `bun run preview`         | Preview your build locally, before deploying     |
+| `bun run astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `bun run astro -- --help` | Get help using the Astro CLI                     |
 
 ## Contributors
 

@@ -1,5 +1,3 @@
-<!-- Before creating a PR, please select one of the labels in the right-hand side Labels option: [feature], [fix], [documentation], [translation]. This will help Actions categorize PRs for Releases. -->
-
 **By submitting this pull request, I confirm the following (please check the boxes):**
 
 - [ ] I have read and understood the [Contributor Guidelines](https://github.com/Redot-Experimental/redot-experimental-docs/blob/master/CONTRIBUTING.md).
